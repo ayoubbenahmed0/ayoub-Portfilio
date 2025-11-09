@@ -109,16 +109,17 @@ export default function Contact() {
     setSubmitStatus(null)
     setErrorMessage('')
 
-    // Get EmailJS configuration from environment or localStorage
-    const emailjsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || localStorage.getItem('emailjs_service_id')
-    const emailjsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || localStorage.getItem('emailjs_template_id')
-    const emailjsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || localStorage.getItem('emailjs_public_key')
+    // Get EmailJS configuration from environment variables only (for security)
+    // Environment variables are set in Netlify and take precedence
+    const emailjsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
+    const emailjsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
+    const emailjsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
 
-    // Check if EmailJS is configured
+    // Check if EmailJS is configured via environment variables
     if (!emailjsServiceId || !emailjsTemplateId || !emailjsPublicKey) {
       setIsSubmitting(false)
       setErrorMessage(
-        'Email service not configured. Open Admin → Contact Info and fill: Service ID, Template ID, Public Key, then click Save. Alternatively set env vars: VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, VITE_EMAILJS_PUBLIC_KEY.'
+        'Contact form is currently unavailable. Please contact the site administrator or try again later.'
       )
       setSubmitStatus('error')
       setTimeout(() => {
@@ -137,7 +138,7 @@ export default function Contact() {
       if (!recipientEmail || !recipientEmail.includes('@')) {
         setIsSubmitting(false)
         setErrorMessage(
-          'Recipient email is not configured. Open Admin → Contact Info and set the Email card value to a valid address (e.g., yourname@example.com), or set VITE_CONTACT_EMAIL in .env.local.'
+          'Contact form is currently unavailable. Please contact the site administrator or try again later.'
         )
         setSubmitStatus('error')
         setTimeout(() => {
