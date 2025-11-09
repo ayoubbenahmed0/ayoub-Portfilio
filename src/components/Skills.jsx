@@ -297,8 +297,22 @@ export default function Skills() {
     return <div className="min-h-screen py-20 flex items-center justify-center">Loading...</div>
   }
 
+  // Show section even if empty, but with a message
   if (!skills || skills.length === 0) {
-    return null // Don't show section if no skills
+    return (
+      <section
+        id="skills"
+        ref={ref}
+        className="relative min-h-screen py-20 md:py-32 overflow-hidden"
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center py-20">
+            <p className="text-foreground/60 mb-4">No skills to display</p>
+            <p className="text-sm text-foreground/40">Check browser console for details</p>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   const categories = ['All', ...new Set(skills.map(skill => skill.category))]
