@@ -109,25 +109,10 @@ export default function Contact() {
     setSubmitStatus(null)
     setErrorMessage('')
 
-    // Get EmailJS configuration from environment variables only (for security)
-    // Environment variables are set in Netlify and take precedence
-    const emailjsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
-    const emailjsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
-    const emailjsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-
-    // Check if EmailJS is configured via environment variables
-    if (!emailjsServiceId || !emailjsTemplateId || !emailjsPublicKey) {
-      setIsSubmitting(false)
-      setErrorMessage(
-        'Contact form is currently unavailable. Please contact the site administrator or try again later.'
-      )
-      setSubmitStatus('error')
-      setTimeout(() => {
-        setSubmitStatus(null)
-        setErrorMessage('')
-      }, 5000)
-      return
-    }
+    // EmailJS Configuration (hardcoded)
+    const emailjsServiceId = 'service_48ams9f'
+    const emailjsTemplateId = 'template_pgyr115'
+    const emailjsPublicKey = '4dZJCDcp6anscSSmL'
 
     try {
       // Determine recipient email from Contact Info or environment
