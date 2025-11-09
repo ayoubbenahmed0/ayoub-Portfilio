@@ -1,19 +1,14 @@
-// Shared storage utility using JSONBin.io
-// This allows all users to see the same data when admin makes changes
-// 
-// Setup: 
-// 1. Get API key from https://jsonbin.io/
-// 2. Create a public bin
-// 3. Set VITE_JSONBIN_API_KEY and VITE_JSONBIN_BIN_ID in Netlify environment variables
-// 4. Or hardcode them below for testing
+
 
 const JSONBIN_API_URL = 'https://api.jsonbin.io/v3'
 
-// Get API key from environment variable or hardcode here
-// Get your API key from https://jsonbin.io/ (free account)
-const API_KEY = import.meta.env.VITE_JSONBIN_API_KEY || ''
+// Hardcoded JSONBin credentials (fallback if environment variables are not set)
 const JSONBIN_MASTER_KEY = '$2a$10$h0TqXfKJUFANLz/8duPtGuynSMlrYSuaBO9AVfcT3dkiRge1HGTPy'
 const JSONBIN_BIN_ID = '69106b3bd0ea881f40dd4ef0'
+
+// Get API key from environment variable or use hardcoded value
+// Get your API key from https://jsonbin.io/ (free account)
+const API_KEY = import.meta.env.VITE_JSONBIN_API_KEY || JSONBIN_MASTER_KEY
 
 // Get Bin ID from environment variable, localStorage, or hardcode here
 // If not set, it will be created automatically on first save
@@ -21,6 +16,10 @@ const getBinId = () => {
   // Try environment variable first
   if (import.meta.env.VITE_JSONBIN_BIN_ID) {
     return import.meta.env.VITE_JSONBIN_BIN_ID
+  }
+  // Try hardcoded value
+  if (JSONBIN_BIN_ID) {
+    return JSONBIN_BIN_ID
   }
   // Try localStorage (stored after first bin creation)
   const storedBinId = localStorage.getItem('portfolio_jsonbin_id')
@@ -38,15 +37,10 @@ const isConfigured = () => {
 
 /**
  * Load portfolio data from JSONBin.io
+ * Public bins can be read without API key
  */
 export const loadSharedData = async () => {
   try {
-    // If not configured (no API key), fallback to localStorage
-    if (!isConfigured()) {
-      console.log('JSONBin API key not configured, using localStorage')
-      return loadFromLocalStorage()
-    }
-
     const binId = getBinId()
     
     // If no bin ID, return null (bin will be created on first save)
@@ -55,26 +49,32 @@ export const loadSharedData = async () => {
       return null
     }
 
+    // For public bins, we can read without API key
+    // But if API key is available, use it for better reliability
+    const headers = {}
+    if (API_KEY) {
+      headers['X-Master-Key'] = API_KEY
+    }
+
     const response = await fetch(`${JSONBIN_API_URL}/b/${binId}/latest`, {
-      headers: {
-        'X-Master-Key': API_KEY,
-        'X-Access-Key': API_KEY,
-      },
+      headers,
     })
 
     if (!response.ok) {
       // If bin doesn't exist (404), return null to use initial data
-      // The bin will be created when admin saves data for the first time
       if (response.status === 404) {
         console.log('JSONBin not found yet, will be created on first save')
         return null
       }
       // For other errors, log and fallback
-      console.error(`Failed to load data: ${response.statusText}`)
+      console.error(`Failed to load data: ${response.status} ${response.statusText}`)
+      const errorText = await response.text().catch(() => '')
+      console.error('Error details:', errorText)
       return loadFromLocalStorage()
     }
 
     const data = await response.json()
+    console.log('✅ Data loaded from JSONBin successfully')
     return data.record || null
   } catch (error) {
     console.error('Error loading shared data:', error)
@@ -107,7 +107,6 @@ export const saveSharedData = async (data) => {
         headers: {
           'Content-Type': 'application/json',
           'X-Master-Key': API_KEY,
-          'X-Access-Key': API_KEY,
           'X-Bin-Name': 'Portfolio Data',
           'X-Bin-Private': 'false', // Make it public
         },
@@ -134,7 +133,6 @@ export const saveSharedData = async (data) => {
         headers: {
           'Content-Type': 'application/json',
           'X-Master-Key': API_KEY,
-          'X-Access-Key': API_KEY,
         },
         body: JSON.stringify(data),
       })
@@ -147,7 +145,6 @@ export const saveSharedData = async (data) => {
           headers: {
             'Content-Type': 'application/json',
             'X-Master-Key': API_KEY,
-            'X-Access-Key': API_KEY,
             'X-Bin-Name': 'Portfolio Data',
             'X-Bin-Private': 'false', // Make it public
           },
@@ -165,7 +162,12 @@ export const saveSharedData = async (data) => {
         console.log('📝 Add this to Netlify environment variables:')
         console.log('   VITE_JSONBIN_BIN_ID=' + newBinId)
       } else if (!response.ok) {
-        throw new Error(`Failed to save data: ${response.statusText}`)
+        const errorText = await response.text().catch(() => 'Unknown error')
+        console.error(`❌ Failed to save data: ${response.status} ${response.statusText}`)
+        console.error('Error details:', errorText)
+        throw new Error(`Failed to save data: ${response.status} ${response.statusText} - ${errorText}`)
+      } else {
+        console.log('✅ JSONBin updated successfully')
       }
     }
 
@@ -175,6 +177,7 @@ export const saveSharedData = async (data) => {
     return true
   } catch (error) {
     console.error('❌ Error saving shared data:', error)
+    console.error('Error stack:', error.stack)
     // Fallback to localStorage on error
     saveToLocalStorage(data)
     return false
@@ -197,7 +200,6 @@ export const createBin = async (initialData) => {
       headers: {
         'Content-Type': 'application/json',
         'X-Master-Key': API_KEY,
-        'X-Access-Key': API_KEY,
         'X-Bin-Name': 'Portfolio Data',
         'X-Bin-Private': 'false', // Make it public so all users can read
       },
