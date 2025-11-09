@@ -26,34 +26,106 @@ export const PortfolioProvider = ({ children }) => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        console.log('📥 Loading portfolio data...')
+        
         // Try to load from shared storage first
         const sharedData = await loadSharedData()
         
-        if (sharedData) {
-          // Use shared data if available
-          setProjects(sharedData.projects || initialProjects)
-          setSkills(sharedData.skills || initialSkills)
-          setSocials(sharedData.socials || initialSocials)
-          setContactInfo(sharedData.contactInfo || initialContactInfo)
+        // Check if sharedData has actual data (not just empty object)
+        const hasSharedData = sharedData && (
+          (sharedData.projects && Array.isArray(sharedData.projects) && sharedData.projects.length > 0) ||
+          (sharedData.skills && Array.isArray(sharedData.skills) && sharedData.skills.length > 0) ||
+          (sharedData.socials && Array.isArray(sharedData.socials) && sharedData.socials.length > 0) ||
+          (sharedData.contactInfo && Array.isArray(sharedData.contactInfo) && sharedData.contactInfo.length > 0)
+        )
+        
+        if (hasSharedData) {
+          console.log('✅ Using data from shared storage (JSONBin.io)')
+          // Use shared data if available, fallback to initial if empty
+          const finalProjects = (sharedData.projects && Array.isArray(sharedData.projects) && sharedData.projects.length > 0) 
+            ? sharedData.projects 
+            : initialProjects
+          const finalSkills = (sharedData.skills && Array.isArray(sharedData.skills) && sharedData.skills.length > 0) 
+            ? sharedData.skills 
+            : initialSkills
+          const finalSocials = (sharedData.socials && Array.isArray(sharedData.socials) && sharedData.socials.length > 0) 
+            ? sharedData.socials 
+            : initialSocials
+          const finalContactInfo = (sharedData.contactInfo && Array.isArray(sharedData.contactInfo) && sharedData.contactInfo.length > 0) 
+            ? sharedData.contactInfo 
+            : initialContactInfo
+          
+          setProjects(finalProjects)
+          setSkills(finalSkills)
+          setSocials(finalSocials)
+          setContactInfo(finalContactInfo)
+          
+          console.log('📊 Data counts:', {
+            projects: finalProjects.length,
+            skills: finalSkills.length,
+            socials: finalSocials.length,
+            contactInfo: finalContactInfo.length
+          })
         } else {
+          console.log('📦 Loading from localStorage or using initial data')
           // Fallback to localStorage or initial data
           const storedProjects = localStorage.getItem('portfolio_projects')
           const storedSkills = localStorage.getItem('portfolio_skills')
           const storedSocials = localStorage.getItem('portfolio_socials')
           const storedContactInfo = localStorage.getItem('portfolio_contact_info')
 
-          setProjects(
-            storedProjects ? JSON.parse(storedProjects) : initialProjects
-          )
-          setSkills(storedSkills ? JSON.parse(storedSkills) : initialSkills)
-          setSocials(storedSocials ? JSON.parse(storedSocials) : initialSocials)
-          setContactInfo(
-            storedContactInfo ? JSON.parse(storedContactInfo) : initialContactInfo
-          )
+          // Parse and validate localStorage data
+          let parsedProjects = null
+          let parsedSkills = null
+          let parsedSocials = null
+          let parsedContactInfo = null
+
+          try {
+            if (storedProjects) {
+              parsedProjects = JSON.parse(storedProjects)
+              if (!Array.isArray(parsedProjects) || parsedProjects.length === 0) {
+                parsedProjects = null
+              }
+            }
+            if (storedSkills) {
+              parsedSkills = JSON.parse(storedSkills)
+              if (!Array.isArray(parsedSkills) || parsedSkills.length === 0) {
+                parsedSkills = null
+              }
+            }
+            if (storedSocials) {
+              parsedSocials = JSON.parse(storedSocials)
+              if (!Array.isArray(parsedSocials) || parsedSocials.length === 0) {
+                parsedSocials = null
+              }
+            }
+            if (storedContactInfo) {
+              parsedContactInfo = JSON.parse(storedContactInfo)
+              if (!Array.isArray(parsedContactInfo) || parsedContactInfo.length === 0) {
+                parsedContactInfo = null
+              }
+            }
+          } catch (parseError) {
+            console.error('Error parsing localStorage data:', parseError)
+          }
+
+          // Use localStorage data if valid, otherwise use initial data
+          setProjects(parsedProjects || initialProjects)
+          setSkills(parsedSkills || initialSkills)
+          setSocials(parsedSocials || initialSocials)
+          setContactInfo(parsedContactInfo || initialContactInfo)
+          
+          console.log('✅ Data loaded:', {
+            projects: parsedProjects ? parsedProjects.length : initialProjects.length,
+            skills: parsedSkills ? parsedSkills.length : initialSkills.length,
+            socials: parsedSocials ? parsedSocials.length : initialSocials.length,
+            contactInfo: parsedContactInfo ? parsedContactInfo.length : initialContactInfo.length
+          })
         }
       } catch (error) {
-        console.error('Error loading data:', error)
+        console.error('❌ Error loading data:', error)
         // Fallback to initial data on error
+        console.log('🔄 Using initial data due to error')
         setProjects(initialProjects)
         setSkills(initialSkills)
         setSocials(initialSocials)
