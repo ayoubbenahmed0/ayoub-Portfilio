@@ -69,7 +69,7 @@ export const PortfolioProvider = ({ children }) => {
   // Save to shared storage (JSONBin.io) and localStorage whenever data changes
   // Only save to shared storage if user is admin
   useEffect(() => {
-    if (!loading) {
+    if (!loading && (projects.length > 0 || skills.length > 0 || socials.length > 0 || contactInfo.length > 0)) {
       const saveData = async () => {
         const data = {
           projects,
@@ -84,17 +84,31 @@ export const PortfolioProvider = ({ children }) => {
         localStorage.setItem('portfolio_socials', JSON.stringify(socials))
         localStorage.setItem('portfolio_contact_info', JSON.stringify(contactInfo))
         
+        // Check if user is admin
+        const userIsAdmin = isAdmin()
+        console.log('💾 Saving data...', { userIsAdmin, projectsCount: projects.length, skillsCount: skills.length })
+        
         // Save to shared storage only if user is admin
-        if (isAdmin()) {
+        if (userIsAdmin) {
+          console.log('👤 Admin detected - saving to shared storage (JSONBin.io)')
           try {
-            await saveSharedData(data)
+            const saved = await saveSharedData(data)
+            if (saved) {
+              console.log('✅ Data saved to shared storage - all users will see changes')
+            } else {
+              console.warn('⚠️ Failed to save to shared storage, using localStorage only')
+            }
           } catch (error) {
-            console.error('Error saving to shared storage:', error)
+            console.error('❌ Error saving to shared storage:', error)
           }
+        } else {
+          console.log('👤 Not admin - data saved to localStorage only (changes visible to this user only)')
         }
       }
       
-      saveData()
+      // Small delay to avoid saving during initial load
+      const timeoutId = setTimeout(saveData, 100)
+      return () => clearTimeout(timeoutId)
     }
   }, [projects, skills, socials, contactInfo, loading])
 
