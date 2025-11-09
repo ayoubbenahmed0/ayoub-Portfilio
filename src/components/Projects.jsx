@@ -106,6 +106,19 @@ export default function Projects() {
     return <div className="min-h-screen py-20 flex items-center justify-center">Loading...</div>
   }
 
+  // Safety check: ensure we have projects to display
+  if (!projects || projects.length === 0) {
+    console.warn('⚠️ No projects found, check data loading')
+    return (
+      <div className="min-h-screen py-20 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-foreground/60 mb-4">No projects to display</p>
+          <p className="text-sm text-foreground/40">Check browser console for details</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <section
       id="projects"
