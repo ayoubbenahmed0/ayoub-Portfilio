@@ -1,0 +1,41 @@
+===========================================
+QUICK FIX: Install EmailJS Package
+===========================================
+
+The EmailJS package needs to be installed to make the contact form work.
+
+STEP 1: Open Terminal
+-----------------------
+Option A: VS Code Terminal (Easiest)
+- Press Ctrl + ` (backtick key) in VS Code
+- Or: Terminal → New Terminal
+
+Option B: Command Prompt
+- Press Win + R
+- Type: cmd
+- Press Enter
+- Navigate: cd "C:\Users\ayoub'PC\Documents\v5"
+
+Option C: File Explorer
+- Open project folder in File Explorer
+- Right-click in folder → "Open in Terminal" or "Open PowerShell here"
+
+STEP 2: Install Package
+------------------------
+Run this command:
+    npm install @emailjs/browser
+
+OR install all dependencies:
+    npm install
+
+STEP 3: Restart Dev Server
+---------------------------
+1. Stop current server (Ctrl + C)
+2. Start again: npm run dev
+
+That's it! The contact form should work now.
+
+===========================================
+
+
+

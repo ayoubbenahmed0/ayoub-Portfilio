@@ -1,0 +1,43 @@
+export const contactInfo = [
+  {
+    id: 'email',
+    icon: 'Mail',
+    title: 'Email',
+    value: 'ayoub.ahmed@example.com',
+    description: 'Drop me a line anytime',
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/20',
+  },
+  {
+    id: 'phone',
+    icon: 'Phone',
+    title: 'Phone',
+    value: '+1 (555) 123-4567',
+    description: 'Available for calls',
+    color: 'text-green-500',
+    bgColor: 'bg-green-500/10',
+    borderColor: 'border-green-500/20',
+  },
+  {
+    id: 'location',
+    icon: 'MapPin',
+    title: 'Location',
+    value: 'Available Worldwide',
+    description: 'Remote & flexible',
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-500/10',
+    borderColor: 'border-purple-500/20',
+  },
+  {
+    id: 'response-time',
+    icon: 'Clock',
+    title: 'Response Time',
+    value: '< 24 hours',
+    description: 'Usually much faster',
+    color: 'text-orange-500',
+    bgColor: 'bg-orange-500/10',
+    borderColor: 'border-orange-500/20',
+  },
+]
+
