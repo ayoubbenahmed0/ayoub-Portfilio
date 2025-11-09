@@ -1,4 +1,11 @@
-
+// Shared storage utility using JSONBin.io
+// This allows all users to see the same data when admin makes changes
+// 
+// Setup: 
+// 1. Get API key from https://jsonbin.io/
+// 2. Create a public bin
+// 3. Set VITE_JSONBIN_API_KEY and VITE_JSONBIN_BIN_ID in Netlify environment variables
+// 4. Or hardcode them below for testing
 
 const JSONBIN_API_URL = 'https://api.jsonbin.io/v3'
 
@@ -74,8 +81,27 @@ export const loadSharedData = async () => {
     }
 
     const data = await response.json()
-    console.log('✅ Data loaded from JSONBin successfully')
-    return data.record || null
+    const record = data.record || null
+    
+    // Validate that record has actual data
+    if (record) {
+      const hasData = (
+        (record.projects && Array.isArray(record.projects) && record.projects.length > 0) ||
+        (record.skills && Array.isArray(record.skills) && record.skills.length > 0) ||
+        (record.socials && Array.isArray(record.socials) && record.socials.length > 0) ||
+        (record.contactInfo && Array.isArray(record.contactInfo) && record.contactInfo.length > 0)
+      )
+      
+      if (hasData) {
+        console.log('✅ Data loaded from JSONBin successfully')
+        return record
+      } else {
+        console.log('⚠️ JSONBin data is empty, will use initial data')
+        return null
+      }
+    }
+    
+    return null
   } catch (error) {
     console.error('Error loading shared data:', error)
     // Fallback to localStorage on error
@@ -233,12 +259,53 @@ const loadFromLocalStorage = () => {
       return null
     }
 
-    return {
-      projects: projects ? JSON.parse(projects) : null,
-      skills: skills ? JSON.parse(skills) : null,
-      socials: socials ? JSON.parse(socials) : null,
-      contactInfo: contactInfo ? JSON.parse(contactInfo) : null,
+    // Parse and validate data
+    let parsedProjects = null
+    let parsedSkills = null
+    let parsedSocials = null
+    let parsedContactInfo = null
+
+    try {
+      if (projects) {
+        parsedProjects = JSON.parse(projects)
+        if (!Array.isArray(parsedProjects) || parsedProjects.length === 0) {
+          parsedProjects = null
+        }
+      }
+      if (skills) {
+        parsedSkills = JSON.parse(skills)
+        if (!Array.isArray(parsedSkills) || parsedSkills.length === 0) {
+          parsedSkills = null
+        }
+      }
+      if (socials) {
+        parsedSocials = JSON.parse(socials)
+        if (!Array.isArray(parsedSocials) || parsedSocials.length === 0) {
+          parsedSocials = null
+        }
+      }
+      if (contactInfo) {
+        parsedContactInfo = JSON.parse(contactInfo)
+        if (!Array.isArray(parsedContactInfo) || parsedContactInfo.length === 0) {
+          parsedContactInfo = null
+        }
+      }
+    } catch (parseError) {
+      console.error('Error parsing localStorage:', parseError)
+      return null
     }
+
+    // Only return if we have at least one valid array
+    if (parsedProjects || parsedSkills || parsedSocials || parsedContactInfo) {
+      return {
+        projects: parsedProjects,
+        skills: parsedSkills,
+        socials: parsedSocials,
+        contactInfo: parsedContactInfo,
+      }
+    }
+
+    return null
   } catch (error) {
     console.error('Error loading from localStorage:', error)
     return null
