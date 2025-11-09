@@ -1,5 +1,5 @@
 import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { ExternalLink, Github } from 'lucide-react'
 import { usePortfolio } from '../context/PortfolioContext'
 import { fadeIn, staggerContainer } from '../utils/motion'
@@ -102,13 +102,22 @@ export default function Projects() {
   const isInView = useInView(ref, { once: true, margin: '-100px' })
   const { projects, loading } = usePortfolio()
 
+  // Debug logging
+  useEffect(() => {
+    console.log('📊 Projects component received:', {
+      projectsCount: projects?.length || 0,
+      loading,
+      projects: projects
+    })
+  }, [projects, loading])
+
   if (loading) {
     return <div className="min-h-screen py-20 flex items-center justify-center">Loading...</div>
   }
 
   // Safety check: ensure we have projects to display
   if (!projects || projects.length === 0) {
-    console.warn('⚠️ No projects found, check data loading')
+    console.warn('⚠️ No projects found, check data loading', { projects, loading })
     return (
       <div className="min-h-screen py-20 flex items-center justify-center">
         <div className="text-center">
