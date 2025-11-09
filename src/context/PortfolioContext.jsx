@@ -3,6 +3,7 @@ import { projects as initialProjects } from '../data/projects'
 import { skills as initialSkills } from '../data/skills'
 import { socials as initialSocials } from '../data/socials'
 import { contactInfo as initialContactInfo } from '../data/contact'
+import { loadSharedData, saveSharedData, isAdmin } from '../utils/storage'
 
 const PortfolioContext = createContext()
 
@@ -21,25 +22,38 @@ export const PortfolioProvider = ({ children }) => {
   const [contactInfo, setContactInfo] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Load data from localStorage or use initial data
+  // Load data from shared storage (JSONBin.io) or fallback to localStorage/initial data
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
-        const storedProjects = localStorage.getItem('portfolio_projects')
-        const storedSkills = localStorage.getItem('portfolio_skills')
-        const storedSocials = localStorage.getItem('portfolio_socials')
-        const storedContactInfo = localStorage.getItem('portfolio_contact_info')
+        // Try to load from shared storage first
+        const sharedData = await loadSharedData()
+        
+        if (sharedData) {
+          // Use shared data if available
+          setProjects(sharedData.projects || initialProjects)
+          setSkills(sharedData.skills || initialSkills)
+          setSocials(sharedData.socials || initialSocials)
+          setContactInfo(sharedData.contactInfo || initialContactInfo)
+        } else {
+          // Fallback to localStorage or initial data
+          const storedProjects = localStorage.getItem('portfolio_projects')
+          const storedSkills = localStorage.getItem('portfolio_skills')
+          const storedSocials = localStorage.getItem('portfolio_socials')
+          const storedContactInfo = localStorage.getItem('portfolio_contact_info')
 
-        setProjects(
-          storedProjects ? JSON.parse(storedProjects) : initialProjects
-        )
-        setSkills(storedSkills ? JSON.parse(storedSkills) : initialSkills)
-        setSocials(storedSocials ? JSON.parse(storedSocials) : initialSocials)
-        setContactInfo(
-          storedContactInfo ? JSON.parse(storedContactInfo) : initialContactInfo
-        )
+          setProjects(
+            storedProjects ? JSON.parse(storedProjects) : initialProjects
+          )
+          setSkills(storedSkills ? JSON.parse(storedSkills) : initialSkills)
+          setSocials(storedSocials ? JSON.parse(storedSocials) : initialSocials)
+          setContactInfo(
+            storedContactInfo ? JSON.parse(storedContactInfo) : initialContactInfo
+          )
+        }
       } catch (error) {
         console.error('Error loading data:', error)
+        // Fallback to initial data on error
         setProjects(initialProjects)
         setSkills(initialSkills)
         setSocials(initialSocials)
@@ -52,30 +66,37 @@ export const PortfolioProvider = ({ children }) => {
     loadData()
   }, [])
 
-  // Save to localStorage whenever data changes
+  // Save to shared storage (JSONBin.io) and localStorage whenever data changes
+  // Only save to shared storage if user is admin
   useEffect(() => {
     if (!loading) {
-      localStorage.setItem('portfolio_projects', JSON.stringify(projects))
+      const saveData = async () => {
+        const data = {
+          projects,
+          skills,
+          socials,
+          contactInfo,
+        }
+        
+        // Always save to localStorage as backup
+        localStorage.setItem('portfolio_projects', JSON.stringify(projects))
+        localStorage.setItem('portfolio_skills', JSON.stringify(skills))
+        localStorage.setItem('portfolio_socials', JSON.stringify(socials))
+        localStorage.setItem('portfolio_contact_info', JSON.stringify(contactInfo))
+        
+        // Save to shared storage only if user is admin
+        if (isAdmin()) {
+          try {
+            await saveSharedData(data)
+          } catch (error) {
+            console.error('Error saving to shared storage:', error)
+          }
+        }
+      }
+      
+      saveData()
     }
-  }, [projects, loading])
-
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem('portfolio_skills', JSON.stringify(skills))
-    }
-  }, [skills, loading])
-
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem('portfolio_socials', JSON.stringify(socials))
-    }
-  }, [socials, loading])
-
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem('portfolio_contact_info', JSON.stringify(contactInfo))
-    }
-  }, [contactInfo, loading])
+  }, [projects, skills, socials, contactInfo, loading])
 
   // Projects CRUD
   const addProject = (project) => {
